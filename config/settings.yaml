@@ -1,0 +1,72 @@
+# aqi-hcho-india — global settings
+
+project:
+  name: aqi-hcho-india
+  gee_project_id: "your-gee-project-id"   # TODO: set your Earth Engine cloud project
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+
+# Common analysis grid (EPSG:4326)
+grid:
+  crs: "EPSG:4326"
+  resolution_deg: 0.1
+  bbox:            # India
+    lon_min: 68.0
+    lon_max: 98.0
+    lat_min: 6.0
+    lat_max: 38.0
+
+dates:
+  start: "2019-01-01"
+  end: "2025-12-31"
+  years: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+# Goal 1: daily surface AQI
+aqi:
+  pollutants: [pm25, pm10, no2, so2, co, o3, nh3]
+  inputs:
+    insat_aod: { source: MOSDAC, product: "INSAT-3D/3DR AOD" }
+    s5p:
+      no2: "COPERNICUS/S5P/OFFL/L3_NO2"
+      so2: "COPERNICUS/S5P/OFFL/L3_SO2"
+      co:  "COPERNICUS/S5P/OFFL/L3_CO"
+      o3:  "COPERNICUS/S5P/OFFL/L3_O3"
+    era5: "ECMWF/ERA5_LAND/DAILY_AGGR"
+  model:
+    type: lightgbm
+    cv: spatial_kfold
+    n_folds: 5
+  # CPCB National AQI breakpoints. Units: µg/m³ except CO (mg/m³).
+  # Each list: [low, high] concentration per category, in category order.
+  categories:
+    - { name: Good,         aqi: [0, 50],    color: "#00B050" }
+    - { name: Satisfactory, aqi: [51, 100],  color: "#92D050" }
+    - { name: Moderate,     aqi: [101, 200], color: "#FFFF00" }
+    - { name: Poor,         aqi: [201, 300], color: "#FF9900" }
+    - { name: Very Poor,    aqi: [301, 400], color: "#FF0000" }
+    - { name: Severe,       aqi: [401, 500], color: "#C00000" }
+  breakpoints:
+    pm25: { avg: 24h, unit: "ug/m3", ranges: [[0, 30], [31, 60], [61, 90], [91, 120], [121, 250], [251, null]] }
+    pm10: { avg: 24h, unit: "ug/m3", ranges: [[0, 50], [51, 100], [101, 250], [251, 350], [351, 430], [431, null]] }
+    no2:  { avg: 24h, unit: "ug/m3", ranges: [[0, 40], [41, 80], [81, 180], [181, 280], [281, 400], [401, null]] }
+    o3:   { avg: 8h,  unit: "ug/m3", ranges: [[0, 50], [51, 100], [101, 168], [169, 208], [209, 748], [749, null]] }
+    co:   { avg: 8h,  unit: "mg/m3", ranges: [[0, 1.0], [1.1, 2.0], [2.1, 10], [10.1, 17], [17.1, 34], [34.1, null]] }
+    so2:  { avg: 24h, unit: "ug/m3", ranges: [[0, 40], [41, 80], [81, 380], [381, 800], [801, 1600], [1601, null]] }
+    nh3:  { avg: 24h, unit: "ug/m3", ranges: [[0, 200], [201, 400], [401, 800], [801, 1200], [1201, 1800], [1801, null]] }
+
+# Goal 2: HCHO hotspots
+hcho:
+  collection: "COPERNICUS/S5P/OFFL/L3_HCHO"
+  seasons:
+    post_monsoon: { months: [10, 11] }      # Oct–Nov (stubble burning, NW India)
+    pre_monsoon:  { months: [3, 4, 5] }     # Mar–May (forest fires, Central/NE India)
+  fires:
+    collection: "FIRMS"                     # VIIRS active fires
+  winds:
+    collection: "ECMWF/ERA5/DAILY"          # u/v for transport analysis
+  hotspots:
+    method: getis_ord_gi_star
+    significance: 0.05

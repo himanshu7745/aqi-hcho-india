@@ -1,0 +1,31 @@
+# Python 3.11
+
+# Earth Engine & geospatial
+earthengine-api
+geemap
+xarray
+rioxarray
+netCDF4
+rasterio
+geopandas
+shapely
+pyproj
+
+# Data / ML
+numpy
+pandas
+scikit-learn
+lightgbm
+shap
+pysal
+pyyaml
+
+# API
+fastapi
+uvicorn[standard]
+titiler.core
+pydantic
+
+# Dev
+pytest
+jupyterlab

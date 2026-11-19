@@ -1,0 +1,25 @@
+# Data (large, never commit)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets / credentials
+.env
+*.json.key
+service-account*.json
+
+# Node / frontend
+web/node_modules/
+web/dist/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
