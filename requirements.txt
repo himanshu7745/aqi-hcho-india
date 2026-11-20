@@ -10,6 +10,8 @@ rasterio
 geopandas
 shapely
 pyproj
+h5py
+cdsapi
 
 # Data / ML
 numpy
@@ -19,6 +21,9 @@ lightgbm
 shap
 pysal
 pyyaml
+requests
+boto3
+pyarrow
 
 # API
 fastapi

@@ -70,3 +70,63 @@ hcho:
   hotspots:
     method: getis_ord_gi_star
     significance: 0.05
+
+# Ingest stage (src/ingest/*). Band names / collection ids live here, not in code.
+ingest:
+  s5p:
+    # product -> [collection, band]. Units: mol/m^2. Daily = mean of granules in the UTC day.
+    products:
+      no2:  ["COPERNICUS/S5P/OFFL/L3_NO2",  "tropospheric_NO2_column_number_density"]
+      so2:  ["COPERNICUS/S5P/OFFL/L3_SO2",  "SO2_column_number_density"]
+      co:   ["COPERNICUS/S5P/OFFL/L3_CO",   "CO_column_number_density"]
+      o3:   ["COPERNICUS/S5P/OFFL/L3_O3",   "O3_column_number_density"]
+      hcho: ["COPERNICUS/S5P/OFFL/L3_HCHO", "tropospheric_HCHO_column_number_density"]
+  era5:
+    land_collection: "ECMWF/ERA5_LAND/DAILY_AGGR"
+    # output name -> ERA5-Land DAILY_AGGR band (land-only; ocean cells are NaN)
+    bands:
+      t2m:    temperature_2m
+      d2m:    dewpoint_temperature_2m
+      u10:    u_component_of_wind_10m
+      v10:    v_component_of_wind_10m
+      sp:     surface_pressure
+      tp:     total_precipitation_sum
+    # Boundary layer height: probe this hourly GEE collection first, fall back to CDS.
+    blh_gee_collection: "ECMWF/ERA5/HOURLY"
+    blh_band: boundary_layer_height
+    blh_cds_dataset: "reanalysis-era5-single-levels"
+    blh_cds_variable: boundary_layer_height
+  firms:
+    gee_collection: "FIRMS"          # MODIS-based, bands T21 / confidence (no FRP)
+    min_confidence: 50               # GEE FIRMS confidence threshold (0-100)
+    archive_dir: data/raw/firms/archive   # VIIRS archive CSVs (with FRP) from firms.modaps.eosdis.nasa.gov
+    viirs_drop_confidence: ["l", "low"]
+    viirs_keep_types: [0]            # archive `type`: 0 vegetation fire (drops volcano/static industrial/offshore)
+    # archive `satellite`: "N" = Suomi-NPP, "1"/"N20" = NOAA-20. Using both double-counts
+    # fires (~50 min apart); SNPP alone covers 2019-2025. null = keep all.
+    viirs_satellites: ["N"]
+    api_sources: ["VIIRS_SNPP_SP"]   # used only with --map-key (VIIRS_SNPP_NRT for the last ~2 months)
+  insat:
+    raw_dir: data/raw/insat
+    file_glob: "3[DR]IMG_*L2G_AOD*.h5"
+    # PLACEHOLDERS -- confirm with `python -m src.ingest.mosdac_insat inspect`
+    aod_var: AOD
+    lat_var: Latitude
+    lon_var: Longitude
+    qc_var: null            # e.g. a quality-flag dataset; null = no QC mask
+    qc_good: [0]            # values of qc_var to keep
+    valid_range: [0.0, 5.0]
+  openaq:
+    base_url: "https://api.openaq.org/v3"
+    api_key_env: OPENAQ_API_KEY
+    country_iso: IN
+    provider_regex: "CPCB"
+    s3_bucket: openaq-data-archive
+    s3_prefix: "records/csv.gz"
+    requests_per_minute: 55
+    parameters: [pm25, pm10, no2, so2, co, o3]
+    timezone: Asia/Kolkata
+    min_hours_per_day: 16
+    rolling_8h_min_hours: 6
+    # drop hourly values above these (units: ug/m3, CO mg/m3)
+    max_plausible: { pm25: 1500, pm10: 2000, no2: 1000, so2: 1500, co: 50, o3: 1000 }

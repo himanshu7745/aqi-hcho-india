@@ -58,4 +58,4 @@ Sub-index by linear interpolation within the breakpoint range.
 - `data/` is never committed. Raw downloads → `data/raw/`, regridded → `data/interim/`, final products → `data/processed/`.
 - Gridded data as xarray Datasets with `lat`/`lon` dims on the common grid; export rasters as COGs.
 - Validate ML models with spatial cross-validation (hold out stations), not random splits.
-- Current status: repo skeleton only — modules are stubs; no analysis code yet.
+- Current status: `src/ingest/` implemented (shared helpers in `src/config.py`, `src/grid/regrid.py`, `src/ingest/_gee.py`); other modules are stubs. Ingest outputs are monthly NetCDFs (time, lat, lon) under `data/raw/<source>/`.
